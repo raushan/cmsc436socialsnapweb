@@ -1,0 +1,9 @@
+*.pyc
+keys.py
+autoload
+dbindexer
+djangoappengine
+djangotoolbox
+django
+.gaedata
+.DS_Store
