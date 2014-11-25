@@ -15,7 +15,7 @@ def index(request):
 		lon = Decimal(post_data['longitude'])
 		url = post_data['image_url']
 		try:
-			#check for the key that will be passed our android application
+			#check for the key that will by passed our android application
 			if post_data['source']:
 				range_val = Decimal(.0002)
 				#make 2 separate queries for userimage objects in range because 
