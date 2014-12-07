@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from form import UserImageForm
 from models import UserImage
-from decimal import Decimal
+from decimal import Decimal, localcontext
 import json
 
 def index(request):
@@ -20,10 +20,13 @@ def index(request):
 				range_val = Decimal(.0002)
 				#make 2 separate queries for userimage objects in range because 
 				#the app engine non-relational database has a limit on joins
-				results_lat = UserImage.objects.filter(latitude__gte=(lat - range_val),
+				with localcontext() as lc:
+					lc.prec=4
+					results_lat = UserImage.objects.filter(latitude__gte=(lat - range_val),
 										 latitude__lte=(lat + range_val))
-				results_lon = UserImage.objects.filter(longitude__gte=(lon - range_val),
+					results_lon = UserImage.objects.filter(longitude__gte=(lon - range_val),
 										 longitude__lte=(lon + range_val))
+
 				#take the common objects between the 2 sets
 				joined_results =  set(results_lat) & set(results_lon)
 				json_data = serializers.serialize("json", joined_results)
