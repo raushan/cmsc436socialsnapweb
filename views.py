@@ -7,6 +7,7 @@ from django.http import HttpResponseRedirect
 from form import UserImageForm
 from models import UserImage
 from decimal import Decimal, localcontext
+from utils import haversine
 import json
 
 def index(request):
@@ -17,24 +18,20 @@ def index(request):
 		try:
 			#check for the key that will by passed our android application
 			if post_data['source']:
-				range_val = Decimal(.0002)
-				#make 2 separate queries for userimage objects in range because 
-				#the app engine non-relational database has a limit on joins
-				with localcontext() as lc:
-					lc.prec=4
-					results_lat = UserImage.objects.filter(latitude__gte=(lat - range_val),
-										 latitude__lte=(lat + range_val))
-					results_lon = UserImage.objects.filter(longitude__gte=(lon - range_val),
-										 longitude__lte=(lon + range_val))
-
+				results = []
+				for uimg in list(UserImage.objects.all()):
+					if haversine(lon, lat, uimg.longitude,uimg.latitude) < .5:
+						results.append(uimg)
+			
 				#take the common objects between the 2 sets
-				joined_results =  set(results_lat) & set(results_lon)
-				json_data = serializers.serialize("json", joined_results)
+				json_data = serializers.serialize("json",results)
 				return HttpResponse(json_data,mimetype='application/json')	
 		except MultiValueDictKeyError:
-			url = post_data['image_url']
-			#populate model with data and save to database
 			a = UserImage()
+			url = post_data['image_url']
+			if 'comment' in post_data.keys():
+				a.comment = post_data['comment']
+			#populate model with data and save to database
 			a.longitude = lon
 			a.latitude = lat
 			a.image_url = url
